@@ -10,6 +10,8 @@
 
 将这些值写入.env文件后(用文本编辑器编辑)运行 `main.py`
 
+(由于不明白为什么打包exe一直报错, 似乎是pySide6和PyInstaller之间有什么问题, 所以暂时不提供打包的exe)
+
 预览图:
 
 ![20240402194636](https://github.com/pyDraco9/Bigtime_Charged_Hourglass_Manager/assets/11333467/1e09ab6e-b708-4181-9ead-84948f5ce74c)
