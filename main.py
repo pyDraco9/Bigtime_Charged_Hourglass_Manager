@@ -51,10 +51,9 @@ class MyWindow(QMainWindow):
     def setup_in_game_table(self):
         self.table_widget.setColumnCount(3)
         self.table_widget.setHorizontalHeaderLabels(["ID", "资产", "剩余时间"])
-
-        self.table_widget.setColumnWidth(0, 300)
-        self.table_widget.setColumnWidth(1, 260)
-        self.table_widget.setColumnWidth(2, 80)
+        self.table_widget.setColumnWidth(0, 260)
+        self.table_widget.setColumnWidth(1, 240)
+        self.table_widget.setColumnWidth(2, 76)
 
     def move_item(self):
         item_list = []
@@ -67,7 +66,8 @@ class MyWindow(QMainWindow):
             try:
                 r = openloot.move_items_to_market(item_list, 3)
                 self.status_bar.showMessage(f'转移成功')
-                for row in range(self.table_widget.rowCount()):
+                rows_count = self.table_widget.rowCount()
+                for row in range(rows_count):
                     checkbox = self.table_widget.cellWidget(row, 0)
                     if isinstance(checkbox, QCheckBox):
                         if checkbox.isChecked():
@@ -85,11 +85,16 @@ class MyWindow(QMainWindow):
         try:
             r = openloot.get_in_game_items(1, 3)
             self.status_bar.showMessage(f'获取成功')
+            print(r.content)
         except Exception as e:
             print(e)
             self.status_bar.showMessage(f'错误: 获取仓库失败')
-
+            return
         items = r.json()
+        if "code" in items is not None and items['code'] == 'Error':
+            self.status_bar.showMessage(f'返回错误: ' + items['message'])
+            return
+        
         for item in items['items']:
             item_id = item['id']
             issued_id = item['issuedId']
