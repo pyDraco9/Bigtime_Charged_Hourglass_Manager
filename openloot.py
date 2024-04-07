@@ -51,3 +51,14 @@ def get_in_game_items(page=1, timeout=3):
         timeout=timeout,
     )
     return r
+
+
+def get_market_items(page=1, timeout=3):
+    url = f"https://api.openloot.com/v2/market/items?gameId=56a149cf-f146-487a-8a1c-58dc9ff3a15c&nftTags=NFT.Hourglass&page={page}&pageSize=50&sort=name%3Aasc&status=unlocked"
+    r = requests.get(
+        url,
+        headers=headers,
+        impersonate="chrome120",
+        timeout=timeout,
+    )
+    return r
