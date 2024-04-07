@@ -1,17 +1,17 @@
 import os
 import sys
 from PySide6.QtGui import QIcon, Qt, QPixmap
-from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, \
-    QCheckBox, QPushButton, QStatusBar, QHBoxLayout
+from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, \
+    QCheckBox, QPushButton, QStatusBar, QWidget, QHBoxLayout, QTabWidget
 import openloot
 
 
-class MyWindow(QMainWindow):
-    def __init__(self):
+class GameItemsTab(QWidget):
+    def __init__(self, status_bar):
         super().__init__()
 
-        self.setWindowTitle('BigTime 充能沙漏管理器')
-        self.setGeometry(100, 100, 680, 400)
+        self.status_bar = status_bar
+
         self.table_widget = QTableWidget()
         self.table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
         self.setup_in_game_table()
@@ -23,30 +23,32 @@ class MyWindow(QMainWindow):
         self.flush_button.clicked.connect(self.flush_item)
         self.move_button.clicked.connect(self.move_item)
 
-        layout_main = QHBoxLayout()
-
-        # 游戏物品窗口 垂直布局
-        layout_ingame = QVBoxLayout()
-        layout_ingame.addWidget(self.table_widget)
-
-        # 按钮部分 横向布局
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.flush_button)
         button_layout.addWidget(self.move_button)
 
-        # 按钮布局加入主窗口
-        layout_ingame.addLayout(button_layout)
-        layout_main.addLayout(layout_ingame)
-        self.setLayout(layout_main)
+        layout = QVBoxLayout()
+        layout.addWidget(self.table_widget)
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
 
-        # 设置对其
-        central_widget = QWidget()
-        central_widget.setLayout(layout_main)
-        self.setCentralWidget(central_widget)
+        self.setStyleSheet("""
+        QPushButton {
+            background-color: #34495e; 
+            border: 2px solid #2c3e50; 
+            color: white; 
+            border-radius: 5px; 
+        }
 
-        # 设置状态栏
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
+        QPushButton:hover {
+            background-color: #2c3e50; 
+        }
+
+        QPushButton:pressed {
+            background-color: #2980b9; 
+            border-color: #2980b9; 
+        }
+    """)
 
     def setup_in_game_table(self):
         self.table_widget.setColumnCount(3)
@@ -110,12 +112,28 @@ class MyWindow(QMainWindow):
             row = self.table_widget.rowCount()
             self.table_widget.insertRow(row)
             checkbox = QCheckBox(item_id)
+            checkbox.clicked = True if int(remaining) >=2160 else False
             self.table_widget.setCellWidget(row, 0, checkbox)
             item = QTableWidgetItem(f'{name} (#{issued_id})')
             item.setData(Qt.DecorationRole, QIcon(pixmap))
             self.table_widget.setItem(row, 1, item)
             item = QTableWidgetItem(remaining)
             self.table_widget.setItem(row, 2, item)
+
+
+class MyWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle('BigTime 充能沙漏管理器')
+        self.setGeometry(100, 100, 680, 400)
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+
+        self.game_items_tab = GameItemsTab(self.status_bar)
+
+        self.setCentralWidget(self.game_items_tab)
 
 
 if __name__ == "__main__":
