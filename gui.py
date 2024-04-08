@@ -1,4 +1,5 @@
 import os
+from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import openloot
@@ -48,6 +49,7 @@ class MarketItemsTab(QWidget):
         
         self.table_widget = QTableWidget()
         self.table_widget.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.table_widget.itemDoubleClicked.connect(self.on_item_double_clicked)
         self.setup_table()
 
         layout = QVBoxLayout()
@@ -56,10 +58,13 @@ class MarketItemsTab(QWidget):
         self.setLayout(layout)
 
         self.setStyleSheet(style_str)
-
+    def on_item_double_clicked(self, item):
+        id = self.table_widget.item(item.row(), 0).text()
+        QDesktopServices.openUrl(QUrl(f"https://openloot.com/collection/{id}/sell"))
+        
     def setup_table(self):
         self.table_widget.setColumnCount(4)
-        self.table_widget.setHorizontalHeaderLabels(["ID", "资产", "剩余时间", "价格"])
+        self.table_widget.setHorizontalHeaderLabels(["ID (双击打开出售页面)", "资产", "剩余时间", "价格"])
         self.table_widget.setColumnWidth(0, 260)
         self.table_widget.setColumnWidth(1, 240)
         self.table_widget.setColumnWidth(2, 76)
@@ -70,7 +75,7 @@ class MarketItemsTab(QWidget):
         self.table_widget.setRowCount(0)
 
     def make_price(self):
-        self.status_bar.showMessage(f'价格: ' + ", ".join(f'{key}:{value}' for key, value in self.price_list.items()))
+        self.status_bar.showMessage(f'价格: ' + "|".join(f'{key}: {value}' for key, value in self.price_list.items()))
         for row in range(self.table_widget.rowCount()):
             name = self.table_widget.item(row, 1)
             name = re.sub(r'(.+?)\s\(#\d+\)', r'\1', name.text())
@@ -100,6 +105,7 @@ class MarketItemsTab(QWidget):
                 except Exception as e:
                     print(e)
                     self.status_bar.showMessage(f'错误: 获取价格失败')
+                    continue
                 items = r.json()
                 if "code" in items is not None and items['code'] == 'Error':
                     self.status_bar.showMessage(f'返回错误: ' + items['message'])
