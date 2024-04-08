@@ -3,6 +3,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import openloot
 from decimal import Decimal
+import re
 
 style_str = """
         QPushButton {
@@ -26,7 +27,7 @@ class MarketItemsTab(QWidget):
     def __init__(self, status_bar):
         super().__init__()
         self.status_bar = status_bar
-
+        self.price_list = {}
         self.flush_button = QPushButton('刷新市场物品', self)
         self.flush_button.setMinimumHeight(40)
         self.flush_button.clicked.connect(self.flush_item)
@@ -69,7 +70,11 @@ class MarketItemsTab(QWidget):
         self.table_widget.setRowCount(0)
 
     def make_price(self):
+        self.status_bar.showMessage(f'价格: ' + ", ".join(f'{key}:{value}' for key, value in self.price_list.items()))
         for row in range(self.table_widget.rowCount()):
+            name = self.table_widget.item(row, 1)
+            name = re.sub(r'(.+?)\s\(#\d+\)', r'\1', name.text())
+            base_price = Decimal(self.price_list[name])
             remaining = self.table_widget.item(row, 2)
             if remaining is not None:
                 time = Decimal(remaining.text()) / Decimal(60)
@@ -77,11 +82,36 @@ class MarketItemsTab(QWidget):
                 result = time * per
                 result = result.quantize(Decimal('0.00'))
                 print(result)
+                result += base_price.quantize(Decimal('0.00'))
                 item = QTableWidgetItem(str(result))
                 self.table_widget.setItem(row, 3, item)
 
     def flush_item(self):
         self.clear_table()
+        if len(self.price_list) == 0:
+            totalPages = 1 
+            page = 1
+            while(True):
+                try:
+                    self.status_bar.showMessage(f'正在获取: {page} 页')
+                    r = openloot.get_hourglass_price(page, 3)
+                    self.status_bar.showMessage(f'获取成功')
+                    print(r.content)
+                except Exception as e:
+                    print(e)
+                    self.status_bar.showMessage(f'错误: 获取价格失败')
+                items = r.json()
+                if "code" in items is not None and items['code'] == 'Error':
+                    self.status_bar.showMessage(f'返回错误: ' + items['message'])
+                    continue
+                totalPages = items['totalPages']
+                for item in items['items']:
+                    self.price_list[item['metadata']['name']] = item['minPrice']
+
+                if page == totalPages or totalPages == 0:
+                    break
+                page += 1
+        
         totalPages = 1 
         page = 1
         while(True):

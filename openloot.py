@@ -62,3 +62,14 @@ def get_market_items(page=1, timeout=3):
         timeout=timeout,
     )
     return r
+
+
+def get_hourglass_price(page=1, timeout=3):
+    url = f"https://api.openloot.com/v2/market/listings?gameId=56a149cf-f146-487a-8a1c-58dc9ff3a15c&nftTags=NFT.Hourglass&onSale=true&page={page}&sort=price%3Aasc"
+    r = requests.get(
+        url,
+        headers=headers,
+        impersonate="chrome120",
+        timeout=timeout,
+    )
+    return r
